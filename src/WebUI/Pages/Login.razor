@@ -1,0 +1,21 @@
+@page "/login"
+@inject IOptions<StoreOptions> Store
+
+<PageTitle>Acceso · @Store.Value.Name</PageTitle>
+
+<section class="login container">
+    <div class="login__panel hud-frame">
+        <p class="eyebrow"><Icon Name="lock" Size="14" /> Zona restringida</p>
+        <h1 class="login__title">Acceso al panel</h1>
+        <p class="login__subtitle">Identifícate para gestionar el catálogo, WhatsApp y los usuarios.</p>
+        <LoginForm ReturnUrl="@ReturnUrl" Reason="@Reason" />
+    </div>
+</section>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Reason { get; set; }
+}

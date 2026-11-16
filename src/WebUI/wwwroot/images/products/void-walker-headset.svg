@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#121a33"/>
+      <stop offset="1" stop-color="#0a0c15"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="52%" r="50%">
+      <stop offset="0" stop-color="#00f0ff" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#00f0ff" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#00f0ff" stroke-opacity=".07"/>
+    </pattern>
+    <linearGradient id="cup" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a3260"/>
+      <stop offset="1" stop-color="#11142a"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <rect width="800" height="600" fill="url(#grid)"/>
+  <ellipse cx="400" cy="320" rx="360" ry="260" fill="url(#halo)"/>
+  <ellipse cx="400" cy="524" rx="250" ry="22" fill="#000" opacity=".5"/>
+
+  <path d="M262 362C262 168 538 168 538 362" fill="none" stroke="#1b2140" stroke-width="44" stroke-linecap="round"/>
+  <path d="M262 362C262 168 538 168 538 362" fill="none" stroke="#2c3560" stroke-width="24" stroke-linecap="round"/>
+  <path d="M292 330C294 206 506 206 508 330" fill="none" stroke="#00f0ff" stroke-width="3" opacity=".9" filter="url(#glow)"/>
+
+  <rect x="198" y="300" width="114" height="172" rx="54" fill="url(#cup)" stroke="#00f0ff" stroke-width="3"/>
+  <ellipse cx="255" cy="386" rx="31" ry="54" fill="none" stroke="#00f0ff" stroke-width="5" filter="url(#glow)"/>
+  <ellipse cx="255" cy="386" rx="14" ry="26" fill="#0a0c15"/>
+
+  <rect x="488" y="300" width="114" height="172" rx="54" fill="url(#cup)" stroke="#00f0ff" stroke-width="3"/>
+  <ellipse cx="545" cy="386" rx="31" ry="54" fill="none" stroke="#ff0055" stroke-width="5" filter="url(#glow)"/>
+  <ellipse cx="545" cy="386" rx="14" ry="26" fill="#0a0c15"/>
+
+  <path d="M236 456C240 522 310 542 372 522" fill="none" stroke="#2c3560" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="381" cy="518" r="13" fill="#00f0ff" filter="url(#glow)"/>
+
+  <g fill="none" stroke="#00f0ff" stroke-width="4" stroke-linecap="round">
+    <path d="M642 340q20 45 0 90" opacity=".55"/>
+    <path d="M670 318q32 67 0 134" opacity=".3"/>
+    <path d="M158 340q-20 45 0 90" opacity=".55"/>
+    <path d="M130 318q-32 67 0 134" opacity=".3"/>
+  </g>
+  <text x="40" y="568" font-family="Consolas, monospace" font-size="16" letter-spacing="5" fill="#00f0ff" fill-opacity=".7">7.1 SURROUND · ANC MIC</text>
+</svg>

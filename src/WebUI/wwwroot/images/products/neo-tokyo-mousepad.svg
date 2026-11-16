@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16152e"/>
+      <stop offset="1" stop-color="#0a0b15"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ff0055" stroke-opacity=".06"/>
+    </pattern>
+    <clipPath id="pad">
+      <rect x="80" y="150" width="640" height="300" rx="24"/>
+    </clipPath>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a0b3a"/>
+      <stop offset=".6" stop-color="#5a1680"/>
+      <stop offset="1" stop-color="#ff2d6f"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffc53d"/>
+      <stop offset="1" stop-color="#ff0055"/>
+    </linearGradient>
+    <mask id="stripes">
+      <rect width="800" height="600" fill="#fff"/>
+      <rect x="300" y="290" width="200" height="6" fill="#000"/>
+      <rect x="300" y="306" width="200" height="8" fill="#000"/>
+      <rect x="300" y="324" width="200" height="10" fill="#000"/>
+    </mask>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <rect width="800" height="600" fill="url(#grid)"/>
+  <ellipse cx="400" cy="486" rx="330" ry="26" fill="#000" opacity=".5"/>
+
+  <g transform="rotate(-4 400 300)">
+    <g clip-path="url(#pad)">
+      <rect x="80" y="150" width="640" height="300" fill="url(#sky)"/>
+      <circle cx="400" cy="298" r="88" fill="url(#sun)" mask="url(#stripes)" filter="url(#glow)"/>
+      <g fill="#0f0820">
+        <rect x="80" y="280" width="40" height="70"/>
+        <rect x="124" y="250" width="34" height="100"/>
+        <rect x="162" y="296" width="30" height="54"/>
+        <rect x="196" y="230" width="42" height="120"/>
+        <rect x="242" y="270" width="36" height="80"/>
+        <rect x="282" y="304" width="30" height="46"/>
+        <rect x="488" y="300" width="30" height="50"/>
+        <rect x="522" y="240" width="40" height="110"/>
+        <rect x="566" y="276" width="32" height="74"/>
+        <rect x="602" y="220" width="44" height="130"/>
+        <rect x="650" y="268" width="36" height="82"/>
+        <rect x="690" y="292" width="30" height="58"/>
+      </g>
+      <g fill="#00f0ff" opacity=".85">
+        <rect x="204" y="244" width="6" height="6"/>
+        <rect x="222" y="262" width="6" height="6"/>
+        <rect x="132" y="268" width="6" height="6"/>
+        <rect x="612" y="236" width="6" height="6"/>
+        <rect x="628" y="258" width="6" height="6"/>
+        <rect x="532" y="256" width="6" height="6"/>
+      </g>
+      <g fill="#ff2d6f" opacity=".9">
+        <rect x="250" y="286" width="6" height="6"/>
+        <rect x="574" y="292" width="6" height="6"/>
+        <rect x="660" y="284" width="6" height="6"/>
+      </g>
+      <rect x="80" y="350" width="640" height="100" fill="#14082a"/>
+      <g stroke="#ff2d6f" stroke-opacity=".75" stroke-width="2">
+        <path d="M80 362H720M80 380H720M80 404H720M80 434H720"/>
+        <path d="M400 350V450M360 350 300 450M440 350 500 450M320 350 200 450M480 350 600 450M280 350 100 450M520 350 700 450"/>
+      </g>
+    </g>
+    <rect x="80" y="150" width="640" height="300" rx="24" fill="none" stroke="#2b3154" stroke-width="6"/>
+    <rect x="87" y="157" width="626" height="286" rx="18" fill="none" stroke="#ff0055" stroke-width="2" stroke-dasharray="6 6" opacity=".6"/>
+  </g>
+  <text x="40" y="568" font-family="Consolas, monospace" font-size="16" letter-spacing="5" fill="#ff2d6f" fill-opacity=".75">XXL · 90 × 40 CM</text>
+</svg>

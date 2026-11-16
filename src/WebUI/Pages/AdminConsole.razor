@@ -1,0 +1,97 @@
+@* Interactive island of the /admin page (private to the Pages layer): tabs, widgets and toasts. *@
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        <div class="admin container">
+            <header class="admin__header">
+                <div>
+                    <p class="eyebrow"><Icon Name="shield" Size="14" /> Panel de control</p>
+                    <h1 class="admin__title">Centro de mando</h1>
+                </div>
+                <a class="btn btn-secondary btn-sm" href="" target="_blank" rel="noopener">
+                    <Icon Name="external" Size="16" /> Ver catálogo
+                </a>
+            </header>
+
+            @if (SessionClaims.MustChangePassword(context.User) && _tab != AdminTab.Security)
+            {
+                <div class="alert alert-warning admin__notice" role="alert">
+                    <Icon Name="alert" />
+                    <span>
+                        Estás usando una contraseña temporal o la predeterminada.
+                        <button type="button" class="link-button" @onclick="() => _tab = AdminTab.Security">Cámbiala ahora</button>
+                        para proteger la tienda.
+                    </span>
+                </div>
+            }
+
+            <nav class="tabs" role="tablist" aria-label="Secciones del panel">
+                @foreach (var tab in Tabs)
+                {
+                    <button type="button"
+                            role="tab"
+                            class="tabs__tab @(tab.Value == _tab ? "is-active" : null)"
+                            aria-selected="@(tab.Value == _tab ? "true" : "false")"
+                            @onclick="() => _tab = tab.Value">
+                        <Icon Name="@tab.Icon" /> <span>@tab.Label</span>
+                    </button>
+                }
+            </nav>
+
+            <div class="tab-panel" role="tabpanel">
+                @switch (_tab)
+                {
+                    case AdminTab.Products:
+                        <AdminProductTableWidget />
+                        break;
+                    case AdminTab.WhatsApp:
+                        <WhatsAppSettingsForm />
+                        break;
+                    case AdminTab.Users:
+                        <AdminUserListWidget />
+                        break;
+                    case AdminTab.Database:
+                        <AdminDatabaseWidget />
+                        break;
+                    case AdminTab.Security:
+                        <ChangePasswordForm />
+                        break;
+                }
+            </div>
+        </div>
+        <ToastHost />
+    </Authorized>
+    <NotAuthorized>
+        <section class="container status-page">
+            <p class="status-page__code">401</p>
+            <h1>Tu sesión terminó</h1>
+            <p>La sesión expiró o la contraseña se cambió desde otro dispositivo.</p>
+            <button type="button" class="btn btn-primary" @onclick="GoToLogin"><Icon Name="key" /> Iniciar sesión</button>
+        </section>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private enum AdminTab
+    {
+        Products,
+        WhatsApp,
+        Users,
+        Database,
+        Security,
+    }
+
+    private static readonly (AdminTab Value, string Label, string Icon)[] Tabs =
+    [
+        (AdminTab.Products, "Productos", "grid"),
+        (AdminTab.WhatsApp, "WhatsApp", "whatsapp"),
+        (AdminTab.Users, "Usuarios", "users"),
+        (AdminTab.Database, "Base de datos", "database"),
+        (AdminTab.Security, "Seguridad", "key"),
+    ];
+
+    private AdminTab _tab = AdminTab.Products;
+
+    private void GoToLogin() => Navigation.NavigateTo("login?returnUrl=%2Fadmin", forceLoad: true);
+}

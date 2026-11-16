@@ -1,0 +1,51 @@
+@inject IOptions<StoreOptions> Store
+
+<header class="navbar">
+    <div class="container navbar__inner">
+        <a class="brand" href="" aria-label="@($"{Store.Value.Name}: ir al catálogo")">
+            <svg class="brand__logo" viewBox="0 0 64 64" aria-hidden="true">
+                <defs>
+                    <linearGradient id="brand-gradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stop-color="#00f0ff" />
+                        <stop offset="1" stop-color="#ff0055" />
+                    </linearGradient>
+                </defs>
+                <path d="M32 6 58 32 32 58 6 32Z" fill="rgba(0,240,255,0.08)" stroke="url(#brand-gradient)" stroke-width="4" />
+                <path d="M21 25h22M32 25v20" stroke="url(#brand-gradient)" stroke-width="5" stroke-linecap="round" />
+            </svg>
+            <span class="brand__text">
+                <span class="brand__name">@Store.Value.Name</span>
+                <span class="brand__tagline">@Store.Value.Tagline</span>
+            </span>
+        </a>
+
+        <nav class="navbar__nav" aria-label="Principal">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <Icon Name="grid" /> <span>Catálogo</span>
+            </NavLink>
+
+            <AuthorizeView>
+                <Authorized>
+                    <NavLink class="nav-link" href="admin">
+                        <Icon Name="shield" /> <span>Panel</span>
+                    </NavLink>
+                    <span class="user-chip" title="Sesión iniciada">
+                        <Icon Name="user" Size="16" /> <span>@context.User.Identity?.Name</span>
+                    </span>
+                    <form method="post" action="auth/logout" class="logout-form">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="returnUrl" value="/" />
+                        <button type="submit" class="nav-link nav-link--button" title="Cerrar sesión">
+                            <Icon Name="logout" /> <span>Salir</span>
+                        </button>
+                    </form>
+                </Authorized>
+                <NotAuthorized>
+                    <NavLink class="nav-link nav-link--cta" href="login">
+                        <Icon Name="lock" Size="16" /> <span>Acceso</span>
+                    </NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </nav>
+    </div>
+</header>

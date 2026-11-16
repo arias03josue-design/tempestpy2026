@@ -1,0 +1,32 @@
+.rarity-badge {
+    --tier: var(--rarity-common);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.65rem 0.28rem 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--tier) 65%, transparent);
+    border-radius: 4px;
+    background: color-mix(in srgb, #0b0d16 72%, var(--tier));
+    color: var(--tier);
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 0 14px color-mix(in srgb, var(--tier) 30%, transparent);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+.rarity-badge__gem {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--tier);
+    transform: rotate(45deg);
+    box-shadow: 0 0 8px var(--tier);
+}
+
+.rarity-badge--rare { --tier: var(--rarity-rare); }
+.rarity-badge--epic { --tier: var(--rarity-epic); }
+.rarity-badge--legendary { --tier: var(--rarity-legendary); }

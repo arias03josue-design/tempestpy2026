@@ -1,0 +1,119 @@
+@* Widget: administrators list + the "create administrator" feature. *@
+@inject ISender Sender
+@inject PriceFormatter Prices
+@inject TimeProvider Time
+
+<div class="users-layout">
+    <section class="panel">
+        <header class="panel__header">
+            <h2 class="panel__title"><Icon Name="users" /> Administradores</h2>
+            <span class="panel__meta">@(_users is null ? "Cargando…" : $"{_users.Count} {(_users.Count == 1 ? "cuenta" : "cuentas")}")</span>
+        </header>
+
+        @if (_error is not null)
+        {
+            <div class="alert alert-error users-alert" role="alert"><Icon Name="alert" /> <span>@_error</span></div>
+        }
+
+        <div class="table-shell">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Usuario</th>
+                        <th scope="col">Creado</th>
+                        <th scope="col">Último acceso</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody aria-busy="@(_users is null ? "true" : "false")">
+                    @if (_users is null)
+                    {
+                        for (var i = 0; i < 3; i++)
+                        {
+                            <tr aria-hidden="true">
+                                <td><div class="user-cell"><div class="skeleton avatar"></div><div class="skeleton skeleton-line sk-user"></div></div></td>
+                                <td><div class="skeleton skeleton-line sk-date"></div></td>
+                                <td><div class="skeleton skeleton-line sk-date"></div></td>
+                                <td><div class="skeleton skeleton-line sk-chip"></div></td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        var utcNow = Time.GetUtcNow().UtcDateTime;
+                        foreach (var user in _users)
+                        {
+                            <tr @key="user.Id">
+                                <td data-label="Usuario">
+                                    <div class="user-cell">
+                                        <span class="avatar" aria-hidden="true">@user.Username[..1].ToUpperInvariant()</span>
+                                        <strong>@user.Username</strong>
+                                        @if (user.Id == _currentUserId)
+                                        {
+                                            <span class="chip chip--cyan">Tú</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td data-label="Creado" class="nowrap">@Prices.FormatDate(user.CreatedAtUtc)</td>
+                                <td data-label="Último acceso" class="nowrap">
+                                    @(user.LastLoginAtUtc is { } lastLogin ? TimeAgo.Format(lastLogin, utcNow, Prices.Culture) : "Nunca")
+                                </td>
+                                <td data-label="Estado" class="nowrap">
+                                    @if (user.MustChangePassword)
+                                    {
+                                        <span class="chip chip--warning">Contraseña temporal</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="chip">Verificado</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <header class="panel__header">
+            <h2 class="panel__title"><Icon Name="plus" /> Nuevo administrador</h2>
+        </header>
+        <CreateUserForm OnCreated="LoadAsync" />
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<UserDto>? _users;
+    private string? _error;
+    private Guid? _currentUserId;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is not null)
+        {
+            _currentUserId = SessionClaims.GetUserId((await AuthenticationState).User);
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var result = await Sender.Send(new GetUsersQuery());
+        if (result.IsSuccess)
+        {
+            _users = result.Value;
+            _error = null;
+        }
+        else
+        {
+            _users ??= [];
+            _error = result.Error.Message;
+        }
+    }
+}

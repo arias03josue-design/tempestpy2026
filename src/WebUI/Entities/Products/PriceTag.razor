@@ -1,0 +1,10 @@
+<div class="price-tag" aria-label="@($"Precio: {Value}")">
+    <span class="price-tag__label" aria-hidden="true">Precio</span>
+    <span class="price-tag__value">@Value</span>
+</div>
+
+@code {
+    /// <summary>Already formatted with the store culture.</summary>
+    [Parameter, EditorRequired]
+    public string Value { get; set; } = string.Empty;
+}

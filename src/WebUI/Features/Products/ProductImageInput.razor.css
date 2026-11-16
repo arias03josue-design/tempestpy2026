@@ -1,0 +1,86 @@
+.image-input {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.image-input__preview {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    margin-bottom: 0.35rem;
+    border: 1px dashed rgba(0, 240, 255, 0.3);
+    border-radius: var(--radius);
+    background:
+        linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px) 0 0 / 24px 24px,
+        #0c0f1c;
+}
+
+.image-input__preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-input__empty {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.5rem;
+    height: 100%;
+    color: var(--text-dim);
+    font-size: 0.88rem;
+}
+
+.image-input__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    background: rgba(8, 10, 20, 0.72);
+    color: var(--cyan);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.image-input__spinner {
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid rgba(0, 240, 255, 0.25);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.image-input__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.image-input__upload {
+    position: relative;
+    overflow: hidden;
+}
+
+/* The native file input covers the styled label (keeps keyboard and screen reader support). */
+.image-input__upload ::deep input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.image-input__upload.is-busy {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

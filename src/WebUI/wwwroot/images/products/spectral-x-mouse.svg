@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101a30"/>
+      <stop offset="1" stop-color="#0a0c15"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="52%" cy="52%" r="48%">
+      <stop offset="0" stop-color="#00f0ff" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#00f0ff" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#00f0ff" stroke-opacity=".07"/>
+    </pattern>
+    <linearGradient id="shell" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2c3460"/>
+      <stop offset="1" stop-color="#11142a"/>
+    </linearGradient>
+    <linearGradient id="rgb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#00f0ff"/>
+      <stop offset=".5" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#ff0055"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <rect width="800" height="600" fill="url(#grid)"/>
+  <ellipse cx="420" cy="310" rx="340" ry="260" fill="url(#halo)"/>
+  <ellipse cx="410" cy="526" rx="180" ry="22" fill="#000" opacity=".5"/>
+
+  <g stroke="#00f0ff" stroke-width="3" stroke-linecap="round">
+    <path d="M110 214H232" opacity=".35"/>
+    <path d="M80 262H214" opacity=".25"/>
+    <path d="M132 310H230" opacity=".2"/>
+  </g>
+
+  <g transform="rotate(-12 400 330)">
+    <path d="M400 130C492 130 532 222 532 330C532 458 474 512 400 512C326 512 268 458 268 330C268 222 308 130 400 130Z" fill="url(#shell)" stroke="#00f0ff" stroke-width="3"/>
+    <path d="M286 250C274 320 278 410 312 466" fill="none" stroke="url(#rgb)" stroke-width="6" stroke-linecap="round" filter="url(#glow)"/>
+    <path d="M514 250C526 320 522 410 488 466" fill="none" stroke="url(#rgb)" stroke-width="6" stroke-linecap="round" filter="url(#glow)"/>
+    <path d="M400 132V292" stroke="#0a0c15" stroke-width="5"/>
+    <path d="M278 292Q400 312 522 292" fill="none" stroke="#0a0c15" stroke-width="4" opacity=".8"/>
+    <rect x="386" y="178" width="28" height="64" rx="14" fill="#0a0c15" stroke="#00f0ff" stroke-width="2.5"/>
+    <line x1="400" y1="190" x2="400" y2="230" stroke="#00f0ff" stroke-width="3" stroke-dasharray="4 5" filter="url(#glow)"/>
+    <path d="M400 380l26 44h-52z" fill="none" stroke="#a855f7" stroke-width="4" stroke-linejoin="round" filter="url(#glow)"/>
+  </g>
+  <text x="40" y="568" font-family="Consolas, monospace" font-size="16" letter-spacing="5" fill="#00f0ff" fill-opacity=".7">26K DPI · 58 G · WIRELESS</text>
+</svg>

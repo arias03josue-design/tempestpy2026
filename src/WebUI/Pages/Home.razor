@@ -1,0 +1,32 @@
+@page "/"
+@inject IOptions<StoreOptions> Store
+
+<PageTitle>@Store.Value.Name · Figuras, coleccionables y gear gamer</PageTitle>
+<HeadContent>
+    <meta name="description" content="Figuras de anime, coleccionables y periféricos gaming. Elige tu ítem y cierra la compra por WhatsApp." />
+</HeadContent>
+
+<section class="hero container">
+    <div class="hero__copy">
+        <p class="eyebrow"><span class="hero__pulse" aria-hidden="true"></span> Temporada 2026 · Stock limitado</p>
+        <h1 class="hero__title">
+            Figuras, coleccionables y <span class="text-gradient">gear gamer</span>
+        </h1>
+        <p class="hero__subtitle">
+            Elige tu ítem favorito y cierra la compra directo por WhatsApp. Sin carritos ni registros: hablas con una persona real.
+        </p>
+    </div>
+    <ul class="hero__stats" aria-label="Cómo comprar">
+        <li><span class="hero__step">01</span> Elige un ítem</li>
+        <li><span class="hero__step">02</span> Toca «Contactar por WhatsApp»</li>
+        <li><span class="hero__step">03</span> Confirma pago y entrega</li>
+    </ul>
+</section>
+
+<section class="container catalog" aria-labelledby="catalog-title">
+    <header class="catalog__header">
+        <h2 id="catalog-title" class="catalog__title">Catálogo</h2>
+        <span class="catalog__line" aria-hidden="true"></span>
+    </header>
+    <ProductGridWidget />
+</section>

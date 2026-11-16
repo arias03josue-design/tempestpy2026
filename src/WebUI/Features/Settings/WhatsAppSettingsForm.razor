@@ -1,0 +1,222 @@
+@* Feature: configure the sales WhatsApp number and the pre-filled message, with a live preview. *@
+@using System.ComponentModel.DataAnnotations
+@inject ISender Sender
+@inject ToastService Toasts
+@inject PriceFormatter Prices
+@inject IOptions<StoreOptions> Store
+
+<div class="settings-layout">
+    <section class="panel">
+        <header class="panel__header">
+            <h2 class="panel__title"><Icon Name="whatsapp" /> WhatsApp de ventas</h2>
+            @if (_saved is not null)
+            {
+                <span class="chip @(_saved.IsConfigured ? "chip--cyan" : "chip--warning")">
+                    @(_saved.IsConfigured ? "Enlaces activos" : "Sin configurar")
+                </span>
+            }
+        </header>
+
+        @if (_model is null)
+        {
+            <div class="form-stack" aria-busy="true">
+                <span class="visually-hidden" role="status">Cargando configuración…</span>
+                <div class="skeleton skeleton-line settings-skeleton__label"></div>
+                <div class="skeleton settings-skeleton__input"></div>
+                <div class="skeleton skeleton-line settings-skeleton__label"></div>
+                <div class="skeleton settings-skeleton__textarea"></div>
+            </div>
+        }
+        else
+        {
+            <EditForm EditContext="_editContext" OnValidSubmit="SaveAsync" class="form-stack" novalidate>
+                <DataAnnotationsValidator />
+                <ServerValidator @ref="_serverValidator" />
+
+                @if (_formError is not null)
+                {
+                    <div class="alert alert-error" role="alert"><Icon Name="alert" /> <span>@_formError</span></div>
+                }
+
+                <div class="field">
+                    <label for="wa-phone">Número de WhatsApp</label>
+                    <div class="input-group">
+                        <span class="input-group__prefix" aria-hidden="true">+</span>
+                        <InputText id="wa-phone" class="input" @bind-Value="_model.PhoneNumber" @oninput="OnPhoneInput"
+                                   inputmode="tel" autocomplete="tel" placeholder="5215512345678" />
+                    </div>
+                    <p class="hint">Código de país + número, solo dígitos y sin «+». Ej.: México 52 1 + 10 dígitos · Costa Rica 506 + 8 dígitos.</p>
+                    <ValidationMessage For="() => _model.PhoneNumber" />
+                </div>
+
+                <div class="field">
+                    <label for="wa-template">Mensaje predeterminado</label>
+                    <InputTextArea id="wa-template" class="input" rows="4" @bind-Value="_model.MessageTemplate" @oninput="OnTemplateInput" />
+                    <div class="placeholder-chips">
+                        <span class="hint">Insertar marcador:</span>
+                        <button type="button" class="chip" @onclick="() => InsertPlaceholder(WhatsAppLinkBuilder.ProductPlaceholder)">@WhatsAppLinkBuilder.ProductPlaceholder</button>
+                        <button type="button" class="chip" @onclick="() => InsertPlaceholder(WhatsAppLinkBuilder.PricePlaceholder)">@WhatsAppLinkBuilder.PricePlaceholder</button>
+                    </div>
+                    <ValidationMessage For="() => _model.MessageTemplate" />
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" disabled="@_saving">
+                        <Icon Name="check" /> @(_saving ? "Guardando…" : "Guardar configuración")
+                    </button>
+                </div>
+            </EditForm>
+        }
+    </section>
+
+    <aside class="panel preview" aria-label="Vista previa del mensaje">
+        <header class="panel__header">
+            <h2 class="panel__title"><Icon Name="message" /> Vista previa</h2>
+        </header>
+
+        <div class="chat">
+            <div class="chat__header">
+                <span class="chat__avatar" aria-hidden="true">◆</span>
+                <div class="chat__contact">
+                    <strong>@Store.Value.Name</strong>
+                    <small>@(_previewPhone is null ? "Número sin configurar" : $"+{_previewPhone}")</small>
+                </div>
+            </div>
+            <div class="chat__body">
+                <p class="chat__bubble">
+                    @_previewMessage
+                    <span class="chat__meta">ahora ✓✓</span>
+                </p>
+            </div>
+        </div>
+
+        <p class="hint preview__sample">Ejemplo con «@SampleProduct» a @_samplePrice.</p>
+
+        @if (_previewLink is not null)
+        {
+            <code class="preview__link">@_previewLink</code>
+            <a class="btn btn-secondary btn-sm" href="@_previewLink" target="_blank" rel="noopener noreferrer">
+                <Icon Name="external" Size="16" /> Probar enlace
+            </a>
+        }
+        else
+        {
+            <div class="alert alert-warning"><Icon Name="info" /> <span>Ingresa un número válido para generar el enlace.</span></div>
+        }
+    </aside>
+</div>
+
+@code {
+    private const string SampleProduct = "Figura Kitsune Ronin 1/7";
+
+    private SettingsFormModel? _model;
+    private EditContext _editContext = default!;
+    private ServerValidator? _serverValidator;
+    private WhatsAppSettingsDto? _saved;
+    private bool _saving;
+    private string? _formError;
+
+    private string _samplePrice = string.Empty;
+    private string? _livePhone;
+    private string? _liveTemplate;
+    private string? _previewPhone;
+    private string _previewMessage = string.Empty;
+    private string? _previewLink;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _samplePrice = Prices.Format(189.99m);
+
+        var result = await Sender.Send(new GetWhatsAppSettingsQuery());
+        _saved = result.IsSuccess ? result.Value : null;
+        _formError = result.IsFailure ? result.Error.Message : null;
+
+        _model = new SettingsFormModel
+        {
+            PhoneNumber = _saved?.PhoneNumber,
+            MessageTemplate = _saved?.MessageTemplate,
+        };
+        _editContext = new EditContext(_model);
+        UpdatePreview();
+    }
+
+    private void OnPhoneInput(ChangeEventArgs e)
+    {
+        _livePhone = e.Value?.ToString();
+        UpdatePreview();
+    }
+
+    private void OnTemplateInput(ChangeEventArgs e)
+    {
+        _liveTemplate = e.Value?.ToString();
+        UpdatePreview();
+    }
+
+    private void InsertPlaceholder(string placeholder)
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _model.MessageTemplate = $"{_model.MessageTemplate?.TrimEnd()} {placeholder}".Trim();
+        _liveTemplate = null;
+        _editContext.NotifyFieldChanged(_editContext.Field(nameof(SettingsFormModel.MessageTemplate)));
+        UpdatePreview();
+    }
+
+    private void UpdatePreview()
+    {
+        var phone = _livePhone ?? _model?.PhoneNumber;
+        var template = _liveTemplate ?? _model?.MessageTemplate;
+
+        _previewPhone = WhatsAppLinkBuilder.NormalizePhoneNumber(phone);
+        _previewMessage = WhatsAppLinkBuilder.RenderMessage(template, SampleProduct, _samplePrice);
+        _previewLink = _previewPhone is null ? null : WhatsAppLinkBuilder.Build(_previewPhone, _previewMessage);
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _formError = null;
+        try
+        {
+            var command = new UpdateWhatsAppSettingsCommand(_model!.PhoneNumber ?? string.Empty, _model.MessageTemplate ?? string.Empty);
+            var result = await Sender.Send(command);
+            if (result.IsFailure)
+            {
+                var shownOnFields = _serverValidator?.Display(result.Error) == true;
+                _formError = shownOnFields ? "Revisa los campos marcados." : result.Error.Message;
+                return;
+            }
+
+            // Show the number exactly as it was stored (digits only).
+            var saved = await Sender.Send(new GetWhatsAppSettingsQuery());
+            if (saved.IsSuccess)
+            {
+                _saved = saved.Value;
+                _model.PhoneNumber = saved.Value.PhoneNumber;
+                _model.MessageTemplate = saved.Value.MessageTemplate;
+            }
+
+            _livePhone = null;
+            _liveTemplate = null;
+            UpdatePreview();
+            Toasts.Success("Configuración de WhatsApp guardada. El catálogo ya usa los nuevos enlaces.");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private sealed class SettingsFormModel
+    {
+        [Required(ErrorMessage = "Ingresa el número de WhatsApp.")]
+        public string? PhoneNumber { get; set; }
+
+        [Required(ErrorMessage = "Escribe el mensaje predeterminado.")]
+        [StringLength(1000, ErrorMessage = "El mensaje admite hasta 1000 caracteres.")]
+        public string? MessageTemplate { get; set; }
+    }
+}

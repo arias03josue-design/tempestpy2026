@@ -1,0 +1,25 @@
+@inherits LayoutComponentBase
+@inject IOptions<StoreOptions> Store
+
+<div class="app-shell">
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+
+    <NavbarWidget />
+
+    <main id="main" class="app-main">
+        @Body
+    </main>
+
+    <footer class="app-footer">
+        <div class="container app-footer__inner">
+            <span class="app-footer__brand">◆ @Store.Value.Name</span>
+            <span>Cotiza y compra directo por WhatsApp · © @DateTime.UtcNow.Year</span>
+        </div>
+    </footer>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    Ocurrió un error inesperado.
+    <a href="." class="reload">Recargar</a>
+    <span class="dismiss">✕</span>
+</div>

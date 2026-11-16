@@ -1,0 +1,25 @@
+@page "/error"
+@using System.Diagnostics
+
+<PageTitle>Error · Algo salió mal</PageTitle>
+
+<section class="container status-page">
+    <p class="status-page__code">ERR</p>
+    <h1>Algo salió mal</h1>
+    <p>Ocurrió un error al procesar tu solicitud. Inténtalo de nuevo en unos segundos.</p>
+    @if (!string.IsNullOrEmpty(_requestId))
+    {
+        <p class="muted">ID de solicitud: <code>@_requestId</code></p>
+    }
+    <a class="btn btn-primary" href=""><Icon Name="grid" /> Volver al catálogo</a>
+</section>
+
+@code {
+    private string? _requestId;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized() =>
+        _requestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

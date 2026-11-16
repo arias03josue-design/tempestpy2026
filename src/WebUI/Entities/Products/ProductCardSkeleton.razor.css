@@ -1,0 +1,44 @@
+.card-skeleton {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(35, 39, 61, 0.7), rgba(21, 24, 38, 0.8));
+}
+
+.card-skeleton__media {
+    aspect-ratio: 4 / 3;
+    border-radius: 0;
+}
+
+.card-skeleton__body {
+    display: grid;
+    gap: 0.7rem;
+    padding: 1rem 1.1rem 1.15rem;
+}
+
+.card-skeleton__title {
+    width: 85%;
+    height: 1.1rem;
+}
+
+.card-skeleton__title--short {
+    width: 55%;
+}
+
+.card-skeleton__text {
+    width: 70%;
+    opacity: 0.7;
+}
+
+.card-skeleton__price {
+    width: 42%;
+    height: 2.4rem;
+    margin-top: 0.4rem;
+}
+
+.card-skeleton__button {
+    height: 2.9rem;
+    border-radius: var(--radius-sm);
+}

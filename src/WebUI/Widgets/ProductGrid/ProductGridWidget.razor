@@ -1,0 +1,68 @@
+@* Static SSR + streaming rendering: the first chunk of HTML ships the skeleton grid; the cards are
+   streamed into the same response once the queries finish. No WebSocket circuit for visitors. *@
+@attribute [StreamRendering]
+@inject ISender Sender
+@inject PriceFormatter Prices
+
+@if (_loading)
+{
+    <div class="product-grid" aria-busy="true">
+        <span class="visually-hidden" role="status">Cargando productos…</span>
+        @for (var i = 0; i < SkeletonCount; i++)
+        {
+            <ProductCardSkeleton />
+        }
+    </div>
+}
+else if (_error is not null)
+{
+    <EmptyState IconName="alert" Title="No pudimos cargar el catálogo" Message="@_error">
+        <a class="btn btn-secondary btn-sm" href="" data-enhance-nav="false"><Icon Name="refresh" /> Reintentar</a>
+    </EmptyState>
+}
+else if (_products.Count == 0)
+{
+    <EmptyState IconName="box" Title="El catálogo está vacío" Message="Pronto llegarán nuevos ítems. ¡Vuelve más tarde!" />
+}
+else
+{
+    <p class="catalog-meta">@_products.Count @(_products.Count == 1 ? "ítem disponible" : "ítems disponibles")</p>
+    <div class="product-grid">
+        @foreach (var product in _products)
+        {
+            var price = Prices.Format(product.Price);
+            <ProductCard @key="product.Id" Product="product" FormattedPrice="@price">
+                <Actions>
+                    <WhatsAppButton Settings="_settings" ProductName="@product.Name" FormattedPrice="@price" />
+                </Actions>
+            </ProductCard>
+        }
+    </div>
+}
+
+@code {
+    private const int SkeletonCount = 8;
+
+    private bool _loading = true;
+    private string? _error;
+    private IReadOnlyList<CatalogProductDto> _products = [];
+    private WhatsAppSettingsDto? _settings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var catalog = await Sender.Send(new GetPublicCatalogQuery());
+        var settings = await Sender.Send(new GetWhatsAppSettingsQuery());
+
+        if (catalog.IsFailure)
+        {
+            _error = catalog.Error.Message;
+        }
+        else
+        {
+            _products = catalog.Value;
+            _settings = settings.IsSuccess ? settings.Value : null;
+        }
+
+        _loading = false;
+    }
+}

@@ -1,0 +1,30 @@
+/* HUD-style price readout */
+.price-tag {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.4rem 0.9rem 0.45rem 0.75rem;
+    border-left: 3px solid var(--tier, var(--cyan));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--tier, var(--cyan)) 14%, transparent), transparent 85%);
+}
+
+.price-tag__label {
+    font-family: var(--font-heading);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.price-tag__value {
+    font-family: var(--font-body);
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    text-shadow: 0 0 16px color-mix(in srgb, var(--tier, var(--cyan)) 45%, transparent);
+}

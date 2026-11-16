@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Blazor Web App organized with Feature-Sliced Design:
+    App → Pages → Widgets → Features → Entities → Shared (each layer only imports the ones to its right).
+  -->
+
+  <PropertyGroup>
+    <!-- .NET 10: NavigationManager.NavigateTo during static SSR issues a redirect instead of throwing. -->
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Design-time only (dotnet ef migrations); never shipped in the publish output / Docker image. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" Publish="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Global design tokens belong to the FSD "Shared" layer; they are served as /app.css.
+      Link sets the public path, ContentRoot tells the dev-time static file server where the file really lives.
+    -->
+    <None Remove="Shared\Styles\app.css" />
+    <Content Include="Shared\Styles\app.css" Link="wwwroot\app.css" ContentRoot="$(MSBuildProjectDirectory)\Shared\Styles\" />
+
+    <!-- Runtime data (SQLite, Data Protection keys, uploads) is never part of the build output. -->
+    <Content Remove="data\**;wwwroot\uploads\**" />
+    <None Remove="data\**;wwwroot\uploads\**" />
+  </ItemGroup>
+
+</Project>

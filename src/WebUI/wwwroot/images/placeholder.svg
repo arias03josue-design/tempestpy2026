@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#171a2e"/>
+      <stop offset="1" stop-color="#0b0d16"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#8f9bc0" stroke-opacity=".08"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <rect width="800" height="600" fill="url(#grid)"/>
+  <g fill="none" stroke="#6f779c" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity=".85">
+    <rect x="300" y="190" width="200" height="160" rx="18"/>
+    <circle cx="350" cy="240" r="16"/>
+    <path d="M500 320 430 258 310 350"/>
+  </g>
+  <text x="400" y="430" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="8" fill="#6f779c">SIN IMAGEN</text>
+</svg>

@@ -1,0 +1,91 @@
+@* Feature: create another administrator with a temporary password. *@
+@using System.ComponentModel.DataAnnotations
+@inject ISender Sender
+@inject ToastService Toasts
+
+<EditForm Model="_model" OnValidSubmit="CreateAsync" class="form-stack" novalidate>
+    <DataAnnotationsValidator />
+    <ServerValidator @ref="_serverValidator" />
+
+    @if (_formError is not null)
+    {
+        <div class="alert alert-error" role="alert"><Icon Name="alert" /> <span>@_formError</span></div>
+    }
+
+    <div class="field">
+        <label for="new-user-name">Usuario</label>
+        <InputText id="new-user-name" class="input" @bind-Value="_model.Username" autocomplete="off" placeholder="ej. maria.ventas" />
+        <p class="hint">3 a 32 caracteres: letras sin acentos, números, punto, guion o guion bajo.</p>
+        <ValidationMessage For="() => _model.Username" />
+    </div>
+
+    <div class="field">
+        <label for="new-user-password">Contraseña temporal</label>
+        <InputText id="new-user-password" type="password" class="input" @bind-Value="_model.Password" autocomplete="new-password" />
+        <ValidationMessage For="() => _model.Password" />
+    </div>
+
+    <div class="field">
+        <label for="new-user-confirm">Confirmar contraseña</label>
+        <InputText id="new-user-confirm" type="password" class="input" @bind-Value="_model.ConfirmPassword" autocomplete="new-password" />
+        <ValidationMessage For="() => _model.ConfirmPassword" />
+    </div>
+
+    <p class="hint">El nuevo administrador verá un aviso para cambiar esta contraseña al ingresar.</p>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary" disabled="@_saving">
+            <Icon Name="plus" /> @(_saving ? "Creando…" : "Crear administrador")
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    private UserFormModel _model = new();
+    private ServerValidator? _serverValidator;
+    private bool _saving;
+    private string? _formError;
+
+    [Parameter]
+    public EventCallback OnCreated { get; set; }
+
+    private async Task CreateAsync()
+    {
+        _saving = true;
+        _formError = null;
+        try
+        {
+            var result = await Sender.Send(new CreateUserCommand(_model.Username, _model.Password));
+            if (result.IsFailure)
+            {
+                var shownOnFields = _serverValidator?.Display(result.Error) == true;
+                _formError = shownOnFields ? null : result.Error.Message;
+                return;
+            }
+
+            Toasts.Success($"Administrador «{_model.Username.Trim().ToLowerInvariant()}» creado.");
+            _model = new UserFormModel();
+            await OnCreated.InvokeAsync();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private sealed class UserFormModel
+    {
+        [Required(ErrorMessage = "Ingresa un nombre de usuario.")]
+        [StringLength(32, MinimumLength = 3, ErrorMessage = "Usa entre 3 y 32 caracteres.")]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Ingresa una contraseña.")]
+        [StringLength(PasswordPolicy.MaxLength, MinimumLength = PasswordPolicy.MinLength,
+            ErrorMessage = "La contraseña debe tener entre 8 y 128 caracteres.")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Confirma la contraseña.")]
+        [Compare(nameof(Password), ErrorMessage = "Las contraseñas no coinciden.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

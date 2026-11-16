@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.swp
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+
+# Per-server settings and secrets (copy .env.example → .env)
+.env
+
+# Runtime data (SQLite database, Data Protection keys, uploaded images)
+src/WebUI/data/
+src/WebUI/wwwroot/uploads/
+*.db
+*.db-shm
+*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db

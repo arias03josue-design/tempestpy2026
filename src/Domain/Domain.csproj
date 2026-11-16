@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Pure domain model: entities, value objects and rules. No framework or infrastructure dependencies. -->
+
+</Project>

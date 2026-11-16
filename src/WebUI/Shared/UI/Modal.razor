@@ -1,0 +1,47 @@
+@if (IsOpen)
+{
+    <div class="modal-root" @onkeydown="HandleKeyDown">
+        <div class="modal-backdrop" @onclick="HandleBackdropClick"></div>
+        <section class="modal modal--@Size" role="dialog" aria-modal="true" aria-labelledby="@_titleId">
+            <header class="modal__header">
+                <h2 id="@_titleId" class="modal__title">@Title</h2>
+                <button type="button" class="icon-btn" aria-label="Cerrar" @onclick="Close">
+                    <Icon Name="x" />
+                </button>
+            </header>
+            <div class="modal__body">
+                @ChildContent
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    private readonly string _titleId = $"modal-{Guid.NewGuid():N}";
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>sm | md | lg</summary>
+    [Parameter]
+    public string Size { get; set; } = "md";
+
+    /// <summary>Off by default so a stray click never discards a half-filled form.</summary>
+    [Parameter]
+    public bool CloseOnBackdrop { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private Task Close() => OnClose.InvokeAsync();
+
+    private Task HandleBackdropClick() => CloseOnBackdrop ? Close() : Task.CompletedTask;
+
+    private Task HandleKeyDown(KeyboardEventArgs e) => e.Key == "Escape" ? Close() : Task.CompletedTask;
+}

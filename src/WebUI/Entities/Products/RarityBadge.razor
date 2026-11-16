@@ -1,0 +1,9 @@
+<span class="rarity-badge rarity-badge--@Rarity.ToCssModifier()" title="@($"Rareza: {Rarity.ToLabel()}")">
+    <span class="rarity-badge__gem" aria-hidden="true"></span>
+    @Rarity.ToLabel()
+</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public Rarity Rarity { get; set; }
+}

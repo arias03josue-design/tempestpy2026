@@ -1,0 +1,204 @@
+@* Widget: product management (list + search/filter + create/edit/toggle/delete features). *@
+@using System.Globalization
+@inject ISender Sender
+@inject PriceFormatter Prices
+@inject TimeProvider Time
+
+<section class="products-admin">
+    <div class="toolbar">
+        <label class="toolbar__search">
+            <Icon Name="search" />
+            <input type="search" placeholder="Buscar por nombre…" aria-label="Buscar productos"
+                   @bind="_search" @bind:event="oninput" />
+        </label>
+
+        <div class="segmented" role="group" aria-label="Filtrar por estado">
+            @foreach (var filter in Filters)
+            {
+                <button type="button"
+                        class="segmented__option @(filter.Value == _filter ? "is-active" : null)"
+                        aria-pressed="@(filter.Value == _filter ? "true" : "false")"
+                        @onclick="() => _filter = filter.Value">
+                    @filter.Label <span class="segmented__count">@Count(filter.Value)</span>
+                </button>
+            }
+        </div>
+
+        <button type="button" class="btn btn-primary" @onclick="OpenCreate">
+            <Icon Name="plus" /> Nuevo producto
+        </button>
+    </div>
+
+    @if (_loadError is not null)
+    {
+        <div class="alert alert-error products-admin__alert" role="alert">
+            <Icon Name="alert" />
+            <span>@_loadError</span>
+            <button type="button" class="btn btn-ghost btn-sm" @onclick="LoadAsync"><Icon Name="refresh" Size="16" /> Reintentar</button>
+        </div>
+    }
+
+    <div class="table-shell">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Rareza</th>
+                    <th scope="col" class="num">Precio</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col" class="actions"><span class="visually-hidden">Acciones</span></th>
+                </tr>
+            </thead>
+            <tbody aria-busy="@(_products is null ? "true" : "false")">
+                @if (_products is null)
+                {
+                    for (var i = 0; i < SkeletonRows; i++)
+                    {
+                        <tr class="skeleton-row" aria-hidden="true">
+                            <td>
+                                <div class="cell-product">
+                                    <div class="skeleton thumb"></div>
+                                    <div class="cell-product__text">
+                                        <div class="skeleton skeleton-line sk-name"></div>
+                                        <div class="skeleton skeleton-line sk-meta"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><div class="skeleton skeleton-line sk-badge"></div></td>
+                            <td class="num"><div class="skeleton skeleton-line sk-price"></div></td>
+                            <td><div class="skeleton skeleton-line sk-toggle"></div></td>
+                            <td class="actions"><div class="skeleton skeleton-line sk-actions"></div></td>
+                        </tr>
+                    }
+                }
+                else if (Visible.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5">
+                            <EmptyState IconName="box"
+                                        Title="@(_products.Count == 0 ? "Aún no hay productos" : "Sin resultados")"
+                                        Message="@(_products.Count == 0 ? "Crea el primero con «Nuevo producto»." : "Prueba con otro nombre o filtro.")" />
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    var utcNow = Time.GetUtcNow().UtcDateTime;
+                    foreach (var product in Visible)
+                    {
+                        <tr @key="product.Id" class="@(product.IsActive ? null : "is-inactive")">
+                            <td data-label="Producto">
+                                <div class="cell-product">
+                                    <img class="thumb" src="@product.ImageUrl" alt="" loading="lazy"
+                                         onerror="this.onerror=null;this.src='/images/placeholder.svg';" />
+                                    <div class="cell-product__text">
+                                        <strong class="cell-product__name">@product.Name</strong>
+                                        <small class="cell-product__meta">
+                                            @(product.UpdatedAtUtc is { } updated
+                                                ? $"Editado {TimeAgo.Format(updated, utcNow, Prices.Culture)}"
+                                                : $"Creado {TimeAgo.Format(product.CreatedAtUtc, utcNow, Prices.Culture)}")
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Rareza"><RarityBadge Rarity="product.Rarity" /></td>
+                            <td data-label="Precio" class="num cell-price">@Prices.Format(product.Price)</td>
+                            <td data-label="Estado"><ProductStatusToggle Product="product" OnChanged="LoadAsync" /></td>
+                            <td class="actions">
+                                <button type="button" class="icon-btn" title="Editar" aria-label="@($"Editar {product.Name}")"
+                                        @onclick="() => OpenEdit(product)">
+                                    <Icon Name="edit" />
+                                </button>
+                                <DeleteProductButton Product="product" OnDeleted="LoadAsync" />
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<Modal IsOpen="_editorOpen" Title="@(_editing is null ? "Nuevo producto" : "Editar producto")" Size="lg" OnClose="CloseEditor">
+    <AddProductForm Product="_editing" OnSaved="HandleSavedAsync" OnCancel="CloseEditor" />
+</Modal>
+
+@code {
+    private enum StatusFilter
+    {
+        All,
+        Active,
+        Inactive,
+    }
+
+    private const int SkeletonRows = 5;
+
+    private static readonly (StatusFilter Value, string Label)[] Filters =
+    [
+        (StatusFilter.All, "Todos"),
+        (StatusFilter.Active, "Activos"),
+        (StatusFilter.Inactive, "Inactivos"),
+    ];
+
+    private IReadOnlyList<AdminProductDto>? _products;
+    private string? _loadError;
+    private string _search = string.Empty;
+    private StatusFilter _filter = StatusFilter.All;
+    private bool _editorOpen;
+    private AdminProductDto? _editing;
+
+    private IReadOnlyList<AdminProductDto> Visible =>
+        (_products ?? []).Where(product => MatchesFilter(product, _filter) && MatchesSearch(product)).ToList();
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var result = await Sender.Send(new GetAdminProductsQuery());
+        if (result.IsSuccess)
+        {
+            _products = result.Value;
+            _loadError = null;
+        }
+        else
+        {
+            _products ??= [];
+            _loadError = result.Error.Message;
+        }
+    }
+
+    private int Count(StatusFilter filter) => (_products ?? []).Count(product => MatchesFilter(product, filter));
+
+    private static bool MatchesFilter(AdminProductDto product, StatusFilter filter) => filter switch
+    {
+        StatusFilter.Active => product.IsActive,
+        StatusFilter.Inactive => !product.IsActive,
+        _ => true,
+    };
+
+    /// <summary>Case and accent insensitive ("katana" finds "Katána").</summary>
+    private bool MatchesSearch(AdminProductDto product) =>
+        string.IsNullOrWhiteSpace(_search)
+        || CultureInfo.InvariantCulture.CompareInfo.IndexOf(
+            product.Name, _search.Trim(), CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0;
+
+    private void OpenCreate()
+    {
+        _editing = null;
+        _editorOpen = true;
+    }
+
+    private void OpenEdit(AdminProductDto product)
+    {
+        _editing = product;
+        _editorOpen = true;
+    }
+
+    private void CloseEditor() => _editorOpen = false;
+
+    private async Task HandleSavedAsync()
+    {
+        _editorOpen = false;
+        await LoadAsync();
+    }
+}

@@ -1,0 +1,36 @@
+@* Feature: "contact the seller about this product". Builds https://wa.me/{numero}?text={mensaje_codificado}
+   from the admin-configured number/template, replacing {producto} and {precio}. *@
+@if (_href is null)
+{
+    <button type="button" class="wa-button wa-button--disabled" disabled
+            title="La tienda aún no configuró su número de WhatsApp">
+        <Icon Name="whatsapp" Size="20" />
+        <span>WhatsApp no disponible</span>
+    </button>
+}
+else
+{
+    <a class="wa-button" href="@_href" target="_blank" rel="noopener noreferrer"
+       aria-label="@($"Contactar por WhatsApp sobre {ProductName}")">
+        <Icon Name="whatsapp" Size="20" />
+        <span>Contactar por WhatsApp</span>
+        <span class="wa-button__arrow" aria-hidden="true">›</span>
+    </a>
+}
+
+@code {
+    private string? _href;
+
+    [Parameter]
+    public WhatsAppSettingsDto? Settings { get; set; }
+
+    [Parameter, EditorRequired]
+    public string ProductName { get; set; } = string.Empty;
+
+    /// <summary>Same text shown on the card, so the customer sees the exact price in the message.</summary>
+    [Parameter, EditorRequired]
+    public string FormattedPrice { get; set; } = string.Empty;
+
+    protected override void OnParametersSet() =>
+        _href = Settings is null ? null : WhatsAppLinkBuilder.ForProduct(Settings, ProductName, FormattedPrice);
+}

@@ -1,0 +1,104 @@
+@* Image picker: paste a URL or upload a file to /uploads (stored in a Docker volume).
+   Inherits InputBase so it plugs into EditForm validation like any other input. *@
+@inherits InputBase<string?>
+@inject ISender Sender
+
+<div class="image-input">
+    <div class="image-input__preview">
+        @if (!string.IsNullOrWhiteSpace(CurrentValue) && !_previewFailed)
+        {
+            <img src="@CurrentValue" alt="Vista previa de la imagen del producto" @onerror="() => _previewFailed = true" />
+        }
+        else
+        {
+            <div class="image-input__empty">
+                <Icon Name="image" Size="30" />
+                <span>@(_previewFailed ? "No se pudo cargar la imagen" : "Sin imagen")</span>
+            </div>
+        }
+        @if (_uploading)
+        {
+            <div class="image-input__overlay"><span class="image-input__spinner" aria-hidden="true"></span> Subiendo…</div>
+        }
+    </div>
+
+    <label class="label" for="@InputId">Imagen del producto</label>
+    <input id="@InputId"
+           class="input @CssClass"
+           inputmode="url"
+           placeholder="https://… o súbela desde tu equipo"
+           @bind="CurrentValueAsString"
+           @bind:after="ResetPreview" />
+
+    <div class="image-input__actions">
+        <label class="btn btn-secondary btn-sm image-input__upload @(_uploading ? "is-busy" : null)">
+            <Icon Name="upload" Size="16" />
+            <span>@(_uploading ? "Subiendo…" : "Subir archivo")</span>
+            <InputFile OnChange="UploadAsync" accept="image/png,image/jpeg,image/webp,image/gif" disabled="@_uploading" />
+        </label>
+        <span class="hint">JPG, PNG, WEBP o GIF · máx. 5 MB</span>
+    </div>
+
+    @if (_uploadError is not null)
+    {
+        <p class="validation-message" role="alert">@_uploadError</p>
+    }
+</div>
+
+@code {
+    private bool _uploading;
+    private bool _previewFailed;
+    private string? _uploadError;
+
+    private string InputId =>
+        AdditionalAttributes?.TryGetValue("id", out var id) == true ? id?.ToString() ?? "product-image" : "product-image";
+
+    protected override bool TryParseValueFromString(
+        string? value,
+        out string? result,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(false)] out string? validationErrorMessage)
+    {
+        result = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        validationErrorMessage = null;
+        return true;
+    }
+
+    private void ResetPreview() => _previewFailed = false;
+
+    private async Task UploadAsync(InputFileChangeEventArgs e)
+    {
+        _uploadError = null;
+        var file = e.File;
+
+        if (file.Size > UploadProductImageCommand.MaxBytes)
+        {
+            _uploadError = "La imagen supera el máximo de 5 MB.";
+            return;
+        }
+
+        _uploading = true;
+        try
+        {
+            await using var stream = file.OpenReadStream(UploadProductImageCommand.MaxBytes);
+            var result = await Sender.Send(new UploadProductImageCommand(stream, file.Name));
+
+            if (result.IsFailure)
+            {
+                _uploadError = result.Error.FieldErrors.Values.SelectMany(messages => messages).FirstOrDefault()
+                               ?? result.Error.Message;
+                return;
+            }
+
+            _previewFailed = false;
+            CurrentValue = result.Value;
+        }
+        catch (IOException)
+        {
+            _uploadError = "No se pudo leer el archivo. Inténtalo de nuevo.";
+        }
+        finally
+        {
+            _uploading = false;
+        }
+    }
+}

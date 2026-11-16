@@ -1,0 +1,115 @@
+@* Static SSR form: the POST is handled on the server, which is the only place able to set the
+   HttpOnly auth cookie (an interactive circuit has no HTTP response to write to). *@
+@inject ISender Sender
+@inject NavigationManager Navigation
+
+@if (_notice is not null)
+{
+    <div class="alert alert-info login-alert"><Icon Name="info" /> <span>@_notice</span></div>
+}
+@if (_error is not null)
+{
+    <div class="alert alert-error login-alert" role="alert"><Icon Name="alert" /> <span>@_error</span></div>
+}
+
+<EditForm Model="Input" FormName="login" method="post" OnValidSubmit="SignInAsync" OnInvalidSubmit="ClearPassword" class="form-stack" novalidate>
+    <DataAnnotationsValidator />
+
+    <div class="field">
+        <label for="login-username">Usuario</label>
+        <InputText id="login-username" class="input" @bind-Value="Input.Username" autocomplete="username" autofocus />
+        <ValidationMessage For="() => Input.Username" />
+    </div>
+
+    <div class="field">
+        <label for="login-password">Contraseña</label>
+        <InputText id="login-password" type="password" class="input" @bind-Value="Input.Password" autocomplete="current-password" />
+        <ValidationMessage For="() => Input.Password" />
+    </div>
+
+    <label class="checkbox-field">
+        <InputCheckbox @bind-Value="Input.RememberMe" />
+        <span>Mantener la sesión iniciada</span>
+    </label>
+
+    <button type="submit" class="btn btn-primary btn-block">
+        <Icon Name="key" /> Ingresar
+    </button>
+</EditForm>
+
+@code {
+    private string? _error;
+    private string? _notice;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [Parameter]
+    public string? ReturnUrl { get; set; }
+
+    [Parameter]
+    public string? Reason { get; set; }
+
+    [SupplyParameterFromForm]
+    private LoginInput Input { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        Input ??= new LoginInput();
+
+        if (!HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            return;
+        }
+
+        if (HttpContext.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo(SafeRedirect.ToLocal(ReturnUrl, "/admin"));
+            return;
+        }
+
+        _notice = Reason switch
+        {
+            "password-changed" => "Contraseña actualizada. Inicia sesión con tu nueva contraseña.",
+            "restored" => "Respaldo restaurado. Inicia sesión con un usuario del respaldo.",
+            "throttled" => "Demasiados intentos de inicio de sesión. Espera un minuto e inténtalo de nuevo.",
+            _ => null,
+        };
+    }
+
+    private async Task SignInAsync()
+    {
+        var result = await Sender.Send(new LoginCommand(Input.Username, Input.Password));
+        ClearPassword();
+
+        if (result.IsFailure)
+        {
+            _error = result.Error.Message;
+            return;
+        }
+
+        var properties = new AuthenticationProperties { IsPersistent = Input.RememberMe };
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            SessionClaims.CreatePrincipal(result.Value),
+            properties);
+
+        Navigation.NavigateTo(SafeRedirect.ToLocal(ReturnUrl, "/admin"));
+    }
+
+    /// <summary>The form is re-rendered on errors: never echo the password back into the HTML.</summary>
+    private void ClearPassword() => Input.Password = string.Empty;
+
+    private sealed class LoginInput
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Ingresa tu usuario.")]
+        [System.ComponentModel.DataAnnotations.StringLength(64)]
+        public string Username { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Ingresa tu contraseña.")]
+        [System.ComponentModel.DataAnnotations.StringLength(PasswordPolicy.MaxLength)]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
+    }
+}

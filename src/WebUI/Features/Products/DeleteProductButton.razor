@@ -1,0 +1,49 @@
+@* Feature: delete a product after an explicit confirmation. *@
+@inject ISender Sender
+@inject ToastService Toasts
+
+<button type="button" class="icon-btn icon-btn--danger" title="Eliminar"
+        aria-label="@($"Eliminar {Product.Name}")" @onclick="() => _confirming = true">
+    <Icon Name="trash" />
+</button>
+
+<ConfirmDialog IsOpen="_confirming"
+               Title="Eliminar producto"
+               Message="@($"Se eliminará «{Product.Name}» de forma permanente. Esta acción no se puede deshacer.")"
+               ConfirmText="Eliminar"
+               Busy="_busy"
+               OnConfirm="DeleteAsync"
+               OnCancel="() => _confirming = false" />
+
+@code {
+    private bool _confirming;
+    private bool _busy;
+
+    [Parameter, EditorRequired]
+    public AdminProductDto Product { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnDeleted { get; set; }
+
+    private async Task DeleteAsync()
+    {
+        _busy = true;
+        try
+        {
+            var result = await Sender.Send(new DeleteProductCommand(Product.Id));
+            if (result.IsFailure)
+            {
+                Toasts.Error(result.Error.Message);
+                return;
+            }
+
+            _confirming = false;
+            Toasts.Success($"«{Product.Name}» se eliminó.");
+            await OnDeleted.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

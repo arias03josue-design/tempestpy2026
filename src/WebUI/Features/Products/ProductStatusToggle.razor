@@ -1,0 +1,49 @@
+@* Feature: activate / deactivate (show or hide from the public catalog). *@
+@inject ISender Sender
+@inject ToastService Toasts
+
+<button type="button"
+        role="switch"
+        class="status-toggle @(Product.IsActive ? "is-on" : "is-off")"
+        aria-checked="@(Product.IsActive ? "true" : "false")"
+        aria-label="@($"Visible en el catálogo: {Product.Name}")"
+        title="@(Product.IsActive ? "Activo: clic para ocultarlo del catálogo" : "Inactivo: clic para mostrarlo en el catálogo")"
+        disabled="@_busy"
+        @onclick="ToggleAsync">
+    <span class="status-toggle__track"><span class="status-toggle__thumb"></span></span>
+    <span class="status-toggle__label">@(Product.IsActive ? "Activo" : "Inactivo")</span>
+</button>
+
+@code {
+    private bool _busy;
+
+    [Parameter, EditorRequired]
+    public AdminProductDto Product { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private async Task ToggleAsync()
+    {
+        _busy = true;
+        try
+        {
+            var activate = !Product.IsActive;
+            var result = await Sender.Send(new SetProductStatusCommand(Product.Id, activate));
+            if (result.IsFailure)
+            {
+                Toasts.Error(result.Error.Message);
+                return;
+            }
+
+            Toasts.Success(activate
+                ? $"«{Product.Name}» ahora es visible en el catálogo."
+                : $"«{Product.Name}» se ocultó del catálogo.");
+            await OnChanged.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

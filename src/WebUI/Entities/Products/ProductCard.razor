@@ -1,0 +1,47 @@
+@* Pure presentation of a catalog product. Actions (e.g. the WhatsApp button) are injected by the
+   widget through the Actions slot, so this entity never depends on a feature (FSD rule). *@
+<article class="product-card product-card--@Product.Rarity.ToCssModifier()">
+    <div class="product-card__media">
+        <img src="@Product.ImageUrl"
+             alt="@Product.Name"
+             loading="lazy"
+             decoding="async"
+             onerror="this.onerror=null;this.src='/images/placeholder.svg';" />
+        <div class="product-card__badge">
+            <RarityBadge Rarity="Product.Rarity" />
+        </div>
+        <span class="hud-corner hud-corner--tl" aria-hidden="true"></span>
+        <span class="hud-corner hud-corner--br" aria-hidden="true"></span>
+    </div>
+
+    <div class="product-card__body">
+        <h3 class="product-card__title" title="@Product.Name">@Product.Name</h3>
+
+        @if (!string.IsNullOrWhiteSpace(Product.Description))
+        {
+            <p class="product-card__description">@Product.Description</p>
+        }
+
+        <div class="product-card__price">
+            <PriceTag Value="@FormattedPrice" />
+        </div>
+
+        @if (Actions is not null)
+        {
+            <div class="product-card__actions">
+                @Actions
+            </div>
+        }
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public CatalogProductDto Product { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string FormattedPrice { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+}

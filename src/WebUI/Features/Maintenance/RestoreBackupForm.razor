@@ -1,0 +1,126 @@
+@* Feature: replace all store data with a backup .zip downloaded from this panel. *@
+@inject ISender Sender
+@inject NavigationManager Navigation
+@inject PriceFormatter Prices
+
+@if (_outcome is not null)
+{
+    <div class="alert alert-success" role="status">
+        <Icon Name="check" />
+        <span>
+            Respaldo restaurado: @_outcome.Products productos, @_outcome.Users administradores y @_outcome.RestoredImages imágenes.
+            Los datos anteriores quedaron en <code>data/backups/@_outcome.SafetyCopyFileName</code>.
+            Cerrando la sesión para que ingreses con un usuario del respaldo…
+        </span>
+    </div>
+}
+else
+{
+    <div class="form-stack">
+        <div class="alert alert-warning">
+            <Icon Name="alert" />
+            <span>
+                Restaurar <strong>reemplaza</strong> todos los productos, usuarios y la configuración de WhatsApp por los del
+                respaldo. Antes se guarda una copia automática de los datos actuales.
+            </span>
+        </div>
+
+        <label class="btn btn-secondary restore-picker @(_busy ? "is-busy" : null)">
+            <Icon Name="upload" />
+            <span>@(_file is null ? "Elegir respaldo (.zip)" : "Elegir otro archivo")</span>
+            <InputFile OnChange="SelectFile" accept=".zip,application/zip" disabled="@_busy" />
+        </label>
+
+        @if (_file is not null)
+        {
+            <p class="restore-file">
+                <Icon Name="database" Size="16" />
+                <strong>@_file.Name</strong> · @ByteSize.Format(_file.Size, Prices.Culture)
+            </p>
+        }
+
+        @if (_error is not null)
+        {
+            <p class="validation-message" role="alert">@_error</p>
+        }
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-danger" disabled="@(_file is null || _busy)" @onclick="() => _confirming = true">
+                <Icon Name="refresh" /> @(_busy ? "Restaurando…" : "Restaurar respaldo")
+            </button>
+        </div>
+    </div>
+}
+
+<ConfirmDialog IsOpen="_confirming"
+               Title="Restaurar respaldo"
+               Message="@($"Se reemplazarán los datos actuales por los de «{_file?.Name}». La sesión se cerrará al terminar.")"
+               ConfirmText="Restaurar"
+               ConfirmIcon="refresh"
+               Busy="_busy"
+               OnConfirm="RestoreAsync"
+               OnCancel="() => _confirming = false" />
+
+@code {
+    private IBrowserFile? _file;
+    private bool _confirming;
+    private bool _busy;
+    private string? _error;
+    private RestoreOutcome? _outcome;
+
+    private void SelectFile(InputFileChangeEventArgs e)
+    {
+        _error = null;
+        _file = e.File;
+
+        if (!_file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            _error = "Selecciona un respaldo .zip descargado desde este panel.";
+            _file = null;
+        }
+        else if (_file.Size > RestoreBackupCommand.MaxBytes)
+        {
+            _error = "El respaldo supera el máximo de 1 GB.";
+            _file = null;
+        }
+    }
+
+    private async Task RestoreAsync()
+    {
+        if (_file is null)
+        {
+            return;
+        }
+
+        _busy = true;
+        _error = null;
+        try
+        {
+            await using var stream = _file.OpenReadStream(RestoreBackupCommand.MaxBytes);
+            var result = await Sender.Send(new RestoreBackupCommand(stream, _file.Name));
+
+            _confirming = false;
+            if (result.IsFailure)
+            {
+                _error = result.Error.FieldErrors.Values.SelectMany(messages => messages).FirstOrDefault() ?? result.Error.Message;
+                return;
+            }
+
+            _outcome = result.Value;
+            StateHasChanged();
+            await Task.Delay(3500);
+
+            // The users table was replaced: start a fresh session.
+            Navigation.NavigateTo("login?reason=restored", forceLoad: true);
+        }
+        catch (IOException)
+        {
+            _confirming = false;
+            _error = "No se pudo leer el archivo. Inténtalo de nuevo.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

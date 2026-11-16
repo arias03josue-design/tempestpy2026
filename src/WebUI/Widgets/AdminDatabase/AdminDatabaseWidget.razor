@@ -1,0 +1,86 @@
+@* Widget: database size, manual backup download and restore. *@
+@inject ISender Sender
+@inject PriceFormatter Prices
+
+<div class="db-layout">
+    <section class="panel">
+        <header class="panel__header">
+            <h2 class="panel__title"><Icon Name="database" /> Base de datos</h2>
+            <button type="button" class="icon-btn" title="Actualizar" aria-label="Actualizar tamaños" @onclick="LoadAsync">
+                <Icon Name="refresh" />
+            </button>
+        </header>
+
+        @if (_error is not null)
+        {
+            <div class="alert alert-error db-alert" role="alert"><Icon Name="alert" /> <span>@_error</span></div>
+        }
+
+        <div class="db-stats" aria-busy="@(_info is null ? "true" : "false")">
+            @if (_info is null)
+            {
+                for (var i = 0; i < 4; i++)
+                {
+                    <div class="db-stat" aria-hidden="true">
+                        <div class="skeleton skeleton-line sk-label"></div>
+                        <div class="skeleton sk-value"></div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="db-stat db-stat--main">
+                    <span class="db-stat__label">Base de datos (SQLite)</span>
+                    <span class="db-stat__value">@ByteSize.Format(_info.DatabaseBytes, Prices.Culture)</span>
+                    <span class="db-stat__hint">@ByteSize.ToGigabytes(_info.DatabaseBytes, Prices.Culture)</span>
+                </div>
+                <div class="db-stat">
+                    <span class="db-stat__label">Imágenes subidas</span>
+                    <span class="db-stat__value">@ByteSize.Format(_info.UploadsBytes, Prices.Culture)</span>
+                    <span class="db-stat__hint">@_info.UploadFiles @(_info.UploadFiles == 1 ? "archivo" : "archivos")</span>
+                </div>
+                <div class="db-stat">
+                    <span class="db-stat__label">Productos</span>
+                    <span class="db-stat__value">@_info.Products</span>
+                </div>
+                <div class="db-stat">
+                    <span class="db-stat__label">Administradores</span>
+                    <span class="db-stat__value">@_info.Users</span>
+                </div>
+            }
+        </div>
+
+        <p class="hint">
+            El tamaño incluye el archivo de registro de SQLite (WAL). El respaldo es un .zip con una copia consistente
+            de la base y las imágenes subidas; se puede descargar sin detener la tienda.
+        </p>
+
+        <div class="form-actions db-actions">
+            @* Plain link (no enhanced navigation): the browser downloads the file from the HTTP endpoint. *@
+            <a class="btn btn-primary" href="admin/db/backup" download data-enhance-nav="false">
+                <Icon Name="download" /> Descargar respaldo (.zip)
+            </a>
+        </div>
+    </section>
+
+    <section class="panel">
+        <header class="panel__header">
+            <h2 class="panel__title"><Icon Name="upload" /> Restaurar respaldo</h2>
+        </header>
+        <RestoreBackupForm />
+    </section>
+</div>
+
+@code {
+    private DatabaseInfoDto? _info;
+    private string? _error;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var result = await Sender.Send(new GetDatabaseInfoQuery());
+        _info = result.IsSuccess ? result.Value : _info;
+        _error = result.IsFailure ? result.Error.Message : null;
+    }
+}

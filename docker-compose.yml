@@ -1,0 +1,54 @@
+name: tempest-store
+
+# Per-server settings live in a .env file next to this one (see .env.example).
+# Without .env the defaults below work for a local run.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tempest-store:latest
+    container_name: tempest-store
+    restart: unless-stopped
+    ports:
+      # Bound to 127.0.0.1 only: the host's Nginx reaches it, the internet does not.
+      # (Ports published on 0.0.0.0 bypass UFW, because Docker writes its own iptables rules.)
+      - "127.0.0.1:${TEMPEST_HTTP_PORT:-5001}:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Behind a reverse proxy: trust X-Forwarded-For/Proto (real client IP for the login rate limit,
+      # https scheme for Secure cookies and HSTS). Safe because the port is only reachable locally.
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: ${TEMPEST_BEHIND_PROXY:-false}
+      # Persistent paths (match the volumes below)
+      ConnectionStrings__Default: "Data Source=/app/data/tempest.db"
+      DataProtection__KeysPath: /app/data/keys
+      Storage__UploadsPath: /app/wwwroot/uploads
+      # Store branding and price format (es-MX → $1,234.50 · es-CR → ₡ · es-ES → €)
+      Store__Name: ${TEMPEST_STORE_NAME:-TEMPEST}
+      Store__Culture: ${TEMPEST_STORE_CULTURE:-es-MX}
+      # First run only (when the Users table is empty). Then change it from /admin → Seguridad.
+      Seed__AdminUsername: ${TEMPEST_ADMIN_USERNAME:-admin}
+      Seed__AdminPassword: ${TEMPEST_ADMIN_PASSWORD:-admin}
+      Seed__WhatsAppNumber: ${TEMPEST_WHATSAPP_NUMBER:-}
+    volumes:
+      - tempest-data:/app/data                # SQLite database + Data Protection keys
+      - tempest-uploads:/app/wwwroot/uploads  # images uploaded from the admin panel
+    # Ceilings (not reservations). Measured: ~125 MB idle, ~220 MB under a 32-connection burst,
+    # ~1 ms of CPU per catalog page. The .NET GC sizes its heap to 75% of the memory limit.
+    deploy:
+      resources:
+        limits:
+          cpus: "${TEMPEST_CPUS:-1.5}"
+          memory: ${TEMPEST_MEMORY:-768M}
+    # Rotate container logs so they never fill the disk.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Lets open admin circuits close gracefully on redeploys.
+    stop_grace_period: 20s
+
+volumes:
+  tempest-data:
+  tempest-uploads:

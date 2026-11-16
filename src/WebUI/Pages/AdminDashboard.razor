@@ -1,0 +1,14 @@
+@page "/admin"
+@attribute [Authorize]
+@inject IOptions<StoreOptions> Store
+
+@* Static shell: route, authorization (enforced before rendering) and <title>.
+   The back-office itself is an Interactive Server island (SignalR circuit). Prerendering is off:
+   the panel needs no SEO and every query runs exactly once. *@
+<PageTitle>Panel · @Store.Value.Name</PageTitle>
+
+<AdminConsole @rendermode="ConsoleRenderMode" />
+
+@code {
+    private static readonly IComponentRenderMode ConsoleRenderMode = new InteractiveServerRenderMode(prerender: false);
+}

@@ -1,0 +1,77 @@
+/* No transforms/filters on these containers: modals and toasts inside use position: fixed. */
+.admin {
+    padding-top: 2.25rem;
+}
+
+.admin__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin__notice {
+    margin-bottom: 1.25rem;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 1.5rem;
+    padding: 0.35rem;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(12, 14, 24, 0.65);
+}
+
+.tabs__tab {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.tabs__tab:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.tabs__tab.is-active {
+    color: var(--cyan);
+    border-color: rgba(0, 240, 255, 0.35);
+    background: rgba(0, 240, 255, 0.08);
+    box-shadow: 0 0 18px rgba(0, 240, 255, 0.15), inset 0 -2px 0 var(--cyan);
+}
+
+.tab-panel {
+    animation: panel-in 0.25s ease both;
+}
+
+@keyframes panel-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

@@ -1,0 +1,38 @@
+# Build output and IDE files
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/TestResults/
+
+# Version control and tooling
+.git/
+.gitignore
+.gitattributes
+.editorconfig
+.claude/
+dotnet-tools.json
+
+# Container and deployment files (avoid busting the cache when only they change)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+compose*.yml
+deploy/
+
+# Secrets must never reach the image
+.env
+.env.*
+
+# Local runtime data: never bake a dev database, keys or uploads into the image
+src/WebUI/data/
+src/WebUI/wwwroot/uploads/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Not needed to build the app
+tests/
+*.md
